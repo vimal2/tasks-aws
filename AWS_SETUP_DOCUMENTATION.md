@@ -1,5 +1,24 @@
 # AWS Infrastructure Setup Documentation
 
+> **IMPORTANT FOR LEARNERS**
+>
+> This document contains **example values** from a specific AWS deployment. **DO NOT copy these values directly.** You must replace them with your own AWS resource IDs, endpoints, and credentials when setting up your environment.
+>
+> Values you MUST replace include:
+> - AWS Account ID (e.g., `127246139738`)
+> - S3 Bucket names (e.g., `task-ui-app-127246139738`)
+> - EC2 Instance IDs and Public IPs
+> - RDS Endpoints
+> - API Gateway IDs and URLs
+> - Security Group IDs
+> - Subnet IDs
+> - IAM Role ARNs
+> - Database credentials
+>
+> When you create your own resources, AWS will generate unique IDs for you. Use those instead.
+
+---
+
 ## Project Overview
 
 This document describes the complete AWS infrastructure setup for a full-stack Task Management application consisting of:
@@ -591,14 +610,16 @@ curl -X DELETE http://44.195.1.174:8080/api/tasks/1
 
 ### Quick Reference
 
-| Component | URL/Endpoint |
-|-----------|--------------|
-| Task Manager UI (S3) | http://task-ui-app-127246139738.s3-website-us-east-1.amazonaws.com |
-| Task API (EC2) | http://44.195.1.174:8080/api/tasks |
-| File API (Lambda) | https://hk327mcsu7.execute-api.us-east-1.amazonaws.com/prod |
-| File Manager UI (S3) | http://lambda-s3-demo-ui-127246139738.s3-website-us-east-1.amazonaws.com |
-| EC2 SSH | `ssh -i springboot-key.pem ec2-user@44.195.1.174` |
-| RDS Endpoint | `springboot-mysql.cevayug0ey5k.us-east-1.rds.amazonaws.com:3306` |
+> **Note:** Replace these example URLs with your own AWS resource endpoints.
+
+| Component | Example URL/Endpoint | Replace With |
+|-----------|---------------------|--------------|
+| Task Manager UI (S3) | http://task-ui-app-127246139738.s3-website-us-east-1.amazonaws.com | `http://<YOUR-BUCKET-NAME>.s3-website-<REGION>.amazonaws.com` |
+| Task API (EC2) | http://44.195.1.174:8080/api/tasks | `http://<YOUR-EC2-PUBLIC-IP>:8080/api/tasks` |
+| File API (Lambda) | https://hk327mcsu7.execute-api.us-east-1.amazonaws.com/prod | `https://<YOUR-API-ID>.execute-api.<REGION>.amazonaws.com/prod` |
+| File Manager UI (S3) | http://lambda-s3-demo-ui-127246139738.s3-website-us-east-1.amazonaws.com | `http://<YOUR-UI-BUCKET>.s3-website-<REGION>.amazonaws.com` |
+| EC2 SSH | `ssh -i springboot-key.pem ec2-user@44.195.1.174` | `ssh -i <YOUR-KEY>.pem ec2-user@<YOUR-EC2-IP>` |
+| RDS Endpoint | `springboot-mysql.cevayug0ey5k.us-east-1.rds.amazonaws.com:3306` | `<YOUR-RDS-IDENTIFIER>.<ID>.<REGION>.rds.amazonaws.com:3306` |
 
 ### Database Connection (from EC2)
 
@@ -744,3 +765,49 @@ aws ec2 delete-key-pair --key-name springboot-key
 
 - **v1.1** - Added Serverless File Manager documentation (Lambda, API Gateway, S3 file storage)
 - **v1.0** - Initial documentation (EC2, RDS, S3 static hosting)
+
+---
+
+## Appendix: Finding Your AWS Resource IDs
+
+When you create your own AWS resources, here's how to find the IDs you'll need:
+
+| Resource | Where to Find |
+|----------|---------------|
+| **AWS Account ID** | AWS Console → Click your username (top right) → Account ID |
+| **EC2 Instance ID** | EC2 Console → Instances → Instance ID column |
+| **EC2 Public IP** | EC2 Console → Instances → Select instance → Public IPv4 address |
+| **RDS Endpoint** | RDS Console → Databases → Select DB → Connectivity & security → Endpoint |
+| **S3 Bucket Name** | S3 Console → Buckets → Name column |
+| **S3 Website URL** | S3 Console → Select bucket → Properties → Static website hosting → Endpoint |
+| **Security Group ID** | EC2 Console → Security Groups → Security group ID column |
+| **Subnet ID** | VPC Console → Subnets → Subnet ID column |
+| **API Gateway ID** | API Gateway Console → APIs → API ID column |
+| **API Gateway URL** | API Gateway Console → Select API → Stages → Invoke URL |
+| **Lambda Function ARN** | Lambda Console → Functions → Select function → Function ARN |
+| **IAM Role ARN** | IAM Console → Roles → Select role → ARN |
+
+### AWS CLI Commands to Find Resources
+
+```bash
+# Get your AWS Account ID
+aws sts get-caller-identity --query Account --output text
+
+# List EC2 instances
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,PublicIpAddress,Tags[?Key==`Name`].Value]' --output table
+
+# List RDS instances
+aws rds describe-db-instances --query 'DBInstances[*].[DBInstanceIdentifier,Endpoint.Address]' --output table
+
+# List S3 buckets
+aws s3 ls
+
+# List API Gateways
+aws apigateway get-rest-apis --query 'items[*].[id,name]' --output table
+
+# List Lambda functions
+aws lambda list-functions --query 'Functions[*].[FunctionName,FunctionArn]' --output table
+
+# List Security Groups
+aws ec2 describe-security-groups --query 'SecurityGroups[*].[GroupId,GroupName]' --output table
+```
