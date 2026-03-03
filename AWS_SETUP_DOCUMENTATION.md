@@ -5,8 +5,8 @@
 > This document contains **example values** from a specific AWS deployment. **DO NOT copy these values directly.** You must replace them with your own AWS resource IDs, endpoints, and credentials when setting up your environment.
 >
 > Values you MUST replace include:
-> - AWS Account ID (e.g., `127246139738`)
-> - S3 Bucket names (e.g., `task-ui-app-127246139738`)
+> - AWS Account ID (e.g., `<ACCOUNT-ID>`)
+> - S3 Bucket names (e.g., `task-ui-app-<ACCOUNT-ID>`)
 > - EC2 Instance IDs and Public IPs
 > - RDS Endpoints
 > - API Gateway IDs and URLs
@@ -76,12 +76,12 @@ This document describes the complete AWS infrastructure setup for a full-stack T
 
 ### IAM User Details
 
-| Property | Example Value | Replace With |
-|----------|---------------|--------------|
-| Account ID | `127246139738` | `<YOUR-ACCOUNT-ID>` |
-| IAM User | `your-iam-username` | `<YOUR-IAM-USERNAME>` |
-| User ARN | `arn:aws:iam::127246139738:user/your-iam-username` | `arn:aws:iam::<YOUR-ACCOUNT-ID>:user/<YOUR-IAM-USERNAME>` |
-| Region | `us-east-1 (N. Virginia)` | Your preferred region |
+| Property | Description |
+|----------|-------------|
+| Account ID | Your 12-digit AWS account ID (find in AWS Console top-right menu) |
+| IAM User | Your IAM username |
+| User ARN | `arn:aws:iam::<ACCOUNT-ID>:user/<IAM-USERNAME>` |
+| Region | `us-east-1 (N. Virginia)` or your preferred region |
 
 ### Required IAM Policies
 
@@ -260,7 +260,7 @@ ssh -i springboot-key.pem ec2-user@44.195.1.174
 
 | Property | Value |
 |----------|-------|
-| Bucket Name | `task-ui-app-127246139738` |
+| Bucket Name | `task-ui-app-<ACCOUNT-ID>` |
 | Region | `us-east-1` |
 | Website Hosting | Enabled |
 | Index Document | `index.html` |
@@ -269,7 +269,7 @@ ssh -i springboot-key.pem ec2-user@44.195.1.174
 ### Website URL
 
 ```
-http://task-ui-app-127246139738.s3-website-us-east-1.amazonaws.com
+http://task-ui-app-<ACCOUNT-ID>.s3-website-us-east-1.amazonaws.com
 ```
 
 ### Bucket Policy
@@ -283,7 +283,7 @@ http://task-ui-app-127246139738.s3-website-us-east-1.amazonaws.com
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::task-ui-app-127246139738/*"
+      "Resource": "arn:aws:s3:::task-ui-app-<ACCOUNT-ID>/*"
     }
   ]
 }
@@ -342,7 +342,7 @@ The application includes a serverless file management system for task file attac
 
 | Variable | Value |
 |----------|-------|
-| BUCKET_NAME | `lambda-s3-demo-bucket-127246139738` |
+| BUCKET_NAME | `lambda-s3-demo-bucket-<ACCOUNT-ID>` |
 
 #### File Processor Lambda (s3-file-processor)
 
@@ -384,13 +384,13 @@ https://hk327mcsu7.execute-api.us-east-1.amazonaws.com/prod
 
 | Property | Value |
 |----------|-------|
-| Bucket Name | `lambda-s3-demo-bucket-127246139738` |
+| Bucket Name | `lambda-s3-demo-bucket-<ACCOUNT-ID>` |
 | Region | us-east-1 |
 | Versioning | Disabled |
 
 **Folder Structure:**
 ```
-lambda-s3-demo-bucket-127246139738/
+lambda-s3-demo-bucket-<ACCOUNT-ID>/
 ├── uploads/           # Standalone file uploads
 └── tasks/             # Task-specific files
     ├── 1/             # Files for task ID 1
@@ -416,14 +416,14 @@ lambda-s3-demo-bucket-127246139738/
 
 | Property | Value |
 |----------|-------|
-| Bucket Name | `lambda-s3-demo-ui-127246139738` |
+| Bucket Name | `lambda-s3-demo-ui-<ACCOUNT-ID>` |
 | Region | us-east-1 |
 | Website Hosting | Enabled |
 | Index Document | index.html |
 
 **Website URL:**
 ```
-http://lambda-s3-demo-ui-127246139738.s3-website-us-east-1.amazonaws.com
+http://lambda-s3-demo-ui-<ACCOUNT-ID>.s3-website-us-east-1.amazonaws.com
 ```
 
 ### IAM Role
@@ -431,7 +431,7 @@ http://lambda-s3-demo-ui-127246139738.s3-website-us-east-1.amazonaws.com
 | Property | Value |
 |----------|-------|
 | Role Name | `lambda-s3-execution-role` |
-| Role ARN | `arn:aws:iam::127246139738:role/lambda-s3-execution-role` |
+| Role ARN | `arn:aws:iam::<ACCOUNT-ID>:role/lambda-s3-execution-role` |
 
 **Attached Policies:**
 
@@ -529,7 +529,7 @@ npm run build
 **Deploy to S3:**
 
 ```bash
-aws s3 sync dist/task-ui/browser s3://task-ui-app-127246139738 --delete
+aws s3 sync dist/task-ui/browser s3://task-ui-app-<ACCOUNT-ID> --delete
 ```
 
 ---
@@ -614,10 +614,10 @@ curl -X DELETE http://44.195.1.174:8080/api/tasks/1
 
 | Component | Example URL/Endpoint | Replace With |
 |-----------|---------------------|--------------|
-| Task Manager UI (S3) | http://task-ui-app-127246139738.s3-website-us-east-1.amazonaws.com | `http://<YOUR-BUCKET-NAME>.s3-website-<REGION>.amazonaws.com` |
+| Task Manager UI (S3) | http://task-ui-app-<ACCOUNT-ID>.s3-website-us-east-1.amazonaws.com | `http://<YOUR-BUCKET-NAME>.s3-website-<REGION>.amazonaws.com` |
 | Task API (EC2) | http://44.195.1.174:8080/api/tasks | `http://<YOUR-EC2-PUBLIC-IP>:8080/api/tasks` |
 | File API (Lambda) | https://hk327mcsu7.execute-api.us-east-1.amazonaws.com/prod | `https://<YOUR-API-ID>.execute-api.<REGION>.amazonaws.com/prod` |
-| File Manager UI (S3) | http://lambda-s3-demo-ui-127246139738.s3-website-us-east-1.amazonaws.com | `http://<YOUR-UI-BUCKET>.s3-website-<REGION>.amazonaws.com` |
+| File Manager UI (S3) | http://lambda-s3-demo-ui-<ACCOUNT-ID>.s3-website-us-east-1.amazonaws.com | `http://<YOUR-UI-BUCKET>.s3-website-<REGION>.amazonaws.com` |
 | EC2 SSH | `ssh -i springboot-key.pem ec2-user@44.195.1.174` | `ssh -i <YOUR-KEY>.pem ec2-user@<YOUR-EC2-IP>` |
 | RDS Endpoint | `springboot-mysql.cevayug0ey5k.us-east-1.rds.amazonaws.com:3306` | `<YOUR-RDS-IDENTIFIER>.<ID>.<REGION>.rds.amazonaws.com:3306` |
 
@@ -689,7 +689,7 @@ aws rds describe-db-instances --db-instance-identifier springboot-mysql \
 **List S3 Bucket Contents:**
 
 ```bash
-aws s3 ls s3://task-ui-app-127246139738
+aws s3 ls s3://task-ui-app-<ACCOUNT-ID>
 ```
 
 ---
@@ -716,9 +716,9 @@ To delete all resources and avoid ongoing charges:
 
 ```bash
 # Delete S3 buckets
-aws s3 rb s3://task-ui-app-127246139738 --force
-aws s3 rb s3://lambda-s3-demo-bucket-127246139738 --force
-aws s3 rb s3://lambda-s3-demo-ui-127246139738 --force
+aws s3 rb s3://task-ui-app-<ACCOUNT-ID> --force
+aws s3 rb s3://lambda-s3-demo-bucket-<ACCOUNT-ID> --force
+aws s3 rb s3://lambda-s3-demo-ui-<ACCOUNT-ID> --force
 
 # Terminate EC2 instance
 aws ec2 terminate-instances --instance-ids i-07de93ccfe9e3e8b6
