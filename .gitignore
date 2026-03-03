@@ -1,0 +1,25 @@
+# AWS Keys - IMPORTANT: Do not commit actual keys
+springboot-key.pem
+
+# Java / Maven
+task-api/target/
+task-api/*.jar
+task-api/.mvn/
+task-api/mvnw
+task-api/mvnw.cmd
+
+# Angular / Node
+task-ui/node_modules/
+task-ui/dist/
+task-ui/.angular/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log

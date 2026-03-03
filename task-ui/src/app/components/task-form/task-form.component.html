@@ -1,0 +1,53 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditing ? 'Edit Task' : 'Create New Task' }}</h2>
+      <button class="close-btn" (click)="onCancel()">&times;</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div *ngIf="error" class="error-message">{{ error }}</div>
+
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input
+          type="text"
+          id="title"
+          [(ngModel)]="formData.title"
+          name="title"
+          placeholder="Enter task title"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          [(ngModel)]="formData.description"
+          name="description"
+          placeholder="Enter task description"
+          rows="4"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" [(ngModel)]="formData.status" name="status">
+          <option *ngFor="let status of statuses" [value]="status">
+            {{ formatStatusLabel(status) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="loading">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          {{ loading ? 'Saving...' : (isEditing ? 'Update Task' : 'Create Task') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

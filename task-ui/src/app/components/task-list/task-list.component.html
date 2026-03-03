@@ -1,0 +1,57 @@
+<div class="task-container">
+  <header class="header">
+    <h1>Task Manager</h1>
+    <button class="btn btn-primary" (click)="openCreateForm()">+ New Task</button>
+  </header>
+
+  <div class="filters">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search tasks..."
+      [(ngModel)]="searchQuery"
+      (input)="onSearchChange()"
+    />
+    <select class="status-select" [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
+      <option value="">All Status</option>
+      <option value="PENDING">Pending</option>
+      <option value="IN_PROGRESS">In Progress</option>
+      <option value="COMPLETED">Completed</option>
+    </select>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">Loading tasks...</div>
+
+  <div *ngIf="!loading && filteredTasks.length === 0" class="empty-state">
+    <p>No tasks found.</p>
+  </div>
+
+  <div class="task-grid" *ngIf="!loading && filteredTasks.length > 0">
+    <div class="task-card" *ngFor="let task of filteredTasks">
+      <div class="task-header">
+        <h3 class="task-title">{{ task.title }}</h3>
+        <span class="task-status" [ngClass]="getStatusClass(task.status)">
+          {{ task.status.replace('_', ' ') }}
+        </span>
+      </div>
+      <p class="task-description">{{ task.description || 'No description' }}</p>
+      <div class="task-meta">
+        <span>Created: {{ formatDate(task.createdAt) }}</span>
+      </div>
+      <div class="task-actions">
+        <button class="btn btn-secondary" (click)="openEditForm(task)">Edit</button>
+        <button class="btn btn-danger" (click)="deleteTask(task)">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-task-form
+  *ngIf="showForm"
+  [task]="selectedTask"
+  [isEditing]="isEditing"
+  (save)="onTaskSaved($event)"
+  (cancel)="closeForm()"
+></app-task-form>
