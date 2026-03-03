@@ -76,12 +76,12 @@ This document describes the complete AWS infrastructure setup for a full-stack T
 
 ### IAM User Details
 
-| Property | Value |
-|----------|-------|
-| Account ID | `127246139738` |
-| IAM User | `vimal.subha.family1` |
-| User ARN | `arn:aws:iam::127246139738:user/vimal.subha.family1` |
-| Region | `us-east-1 (N. Virginia)` |
+| Property | Example Value | Replace With |
+|----------|---------------|--------------|
+| Account ID | `127246139738` | `<YOUR-ACCOUNT-ID>` |
+| IAM User | `your-iam-username` | `<YOUR-IAM-USERNAME>` |
+| User ARN | `arn:aws:iam::127246139738:user/your-iam-username` | `arn:aws:iam::<YOUR-ACCOUNT-ID>:user/<YOUR-IAM-USERNAME>` |
+| Region | `us-east-1 (N. Virginia)` | Your preferred region |
 
 ### Required IAM Policies
 
@@ -248,7 +248,7 @@ yum install -y mysql
 ssh -i springboot-key.pem ec2-user@44.195.1.174
 ```
 
-**Key File Location:** `/Users/vimalkrishnan/Workspace/revature/2353/review/p2/springboot-key.pem`
+**Key File Location:** Store your `.pem` key file in a secure location on your machine
 
 > **Note:** Ensure the key file has proper permissions: `chmod 400 springboot-key.pem`
 
