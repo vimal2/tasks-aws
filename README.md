@@ -4,10 +4,24 @@ A full-stack Task Management application with support for both **local developme
 
 ## Quick Start
 
-| Mode | Backend | Frontend |
-|------|---------|----------|
-| **Local** | `cd task-api && mvn spring-boot:run -Dspring-boot.run.profiles=local` | `cd task-ui && npm run start:local` |
-| **AWS** | Deploy to EC2 (see [AWS Setup](#aws-deployment)) | `cd task-ui && npm start` |
+### Local Development (No AWS Required)
+
+```bash
+# Terminal 1 - Backend (must use local profile!)
+cd task-api
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+# Terminal 2 - Frontend
+cd task-ui
+npm install
+npm start
+```
+
+Open http://localhost:4200
+
+### AWS Production
+
+See [AWS Deployment](#aws-deployment) section below.
 
 ---
 
@@ -68,9 +82,11 @@ tasks-aws/
 │   │   └── services/
 │   │       ├── task.service.ts      # Task API service
 │   │       └── file.service.ts      # File API service (supports both modes)
-│   └── src/environments/
-│       ├── environment.ts           # AWS config
-│       └── environment.local.ts     # Local config
+│   ├── src/environments/
+│   │   ├── environment.ts           # Default (local) config
+│   │   ├── environment.local.ts     # Local config
+│   │   └── environment.prod.ts      # AWS production config
+│   └── proxy.conf.json              # Dev server proxy config
 │
 ├── serverless-file-manager/         # AWS Lambda File Management
 │   ├── api/                         # REST API Lambda
@@ -98,12 +114,23 @@ npm -version       # npm 9+
 
 ### Backend Setup
 
+> **IMPORTANT:** You MUST run with the `local` profile for file uploads to work!
+
 ```bash
 cd task-api
 
-# Run with local profile
+# Run with local profile (REQUIRED for file uploads)
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+**Verify the local profile is active.** You should see this in the console:
+```
+The following 1 profile is active: "local"
+...
+File storage initialized at: /path/to/your/project/uploads
+```
+
+If you don't see `"local"` profile active, file uploads will return **404 Not Found**.
 
 **Local Backend Features:**
 - **H2 In-Memory Database** - Data resets on restart
@@ -112,7 +139,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
   - Username: `sa`
   - Password: *(empty)*
 - **Local File Storage** - Files saved to `./uploads/tasks/{taskId}/`
-- **File API** - Available at `/api/files`
+- **File API** - Available at `/api/files` (only with `local` profile)
 
 ### Frontend Setup
 
@@ -120,11 +147,13 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 cd task-ui
 npm install
 
-# Run with local configuration
-npm run start:local
+# Run with proxy to backend
+npm start
 ```
 
 Access the app at: **http://localhost:4200**
+
+> **Note:** The frontend uses a proxy configuration to forward `/api` requests to `http://localhost:8080`. This avoids CORS issues.
 
 ### Local API Endpoints
 
@@ -240,17 +269,22 @@ https://<API-GATEWAY-ID>.execute-api.us-east-1.amazonaws.com/prod
 
 | Environment | Config File | API URL | File API URL |
 |-------------|-------------|---------|--------------|
-| **development** (AWS) | `environment.ts` | EC2 endpoint | API Gateway |
-| **local** | `environment.local.ts` | localhost:8080 | localhost:8080/api/files |
+| **default** (local dev) | `environment.ts` | `/api` (via proxy) | `/api/files` (via proxy) |
+| **local** | `environment.local.ts` | `/api` (via proxy) | `/api/files` (via proxy) |
+| **production** (AWS) | `environment.prod.ts` | EC2 endpoint | API Gateway |
+
+> **Note:** Local environments use relative URLs (`/api`) which are proxied to `http://localhost:8080` by the Angular dev server.
 
 ### NPM Scripts (task-ui)
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| `npm start` | `ng serve` | Run with AWS config |
-| `npm run start:local` | `ng serve --configuration local` | Run with local config |
+| `npm start` | `ng serve --proxy-config proxy.conf.json` | Run with proxy to backend |
+| `npm run start:local` | `ng serve --configuration local --proxy-config proxy.conf.json` | Run with local config + proxy |
 | `npm run build` | `ng build` | Build for AWS production |
 | `npm run build:local` | `ng build --configuration local` | Build for local |
+
+> **Note:** The proxy forwards `/api` requests from Angular (port 4200) to Spring Boot (port 8080).
 
 ### Maven Commands (task-api)
 
@@ -293,10 +327,31 @@ https://<API-GATEWAY-ID>.execute-api.us-east-1.amazonaws.com/prod
 
 | Issue | Solution |
 |-------|----------|
-| Port 8080 in use | Kill existing process or change `server.port` |
+| **File upload returns 404** | Backend not running with `local` profile. Run: `mvn spring-boot:run -Dspring-boot.run.profiles=local` |
+| Port 8080 in use | Kill existing process or change `server.port` in properties |
 | H2 console not loading | Ensure profile is `local` |
-| Files not uploading | Check `./uploads` folder permissions |
-| CORS errors | Backend must be running on localhost:8080 |
+| Files not uploading (permission) | Check `./uploads` folder permissions |
+| CORS errors | Use `npm start` which includes proxy config |
+
+#### File Upload 404 Error
+
+If you see this error in browser console:
+```
+POST http://localhost:8080/api/files/upload?taskId=2 404 (Not Found)
+```
+
+**Cause:** The `FileController` and `FileStorageService` are only loaded when running with the `local` Spring profile.
+
+**Solution:**
+```bash
+# Make sure to include -Dspring-boot.run.profiles=local
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Verify by checking the startup logs for:
+```
+The following 1 profile is active: "local"
+```
 
 ### AWS Issues
 
