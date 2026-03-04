@@ -42,8 +42,7 @@ export class FileService {
   uploadTaskFile(taskId: number, file: File): Observable<any> {
     if (this.isLocal) {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('taskId', taskId.toString());
+      formData.append('file', file, file.name);
       return this.http.post(`${this.apiUrl}/upload?taskId=${taskId}`, formData);
     }
 
