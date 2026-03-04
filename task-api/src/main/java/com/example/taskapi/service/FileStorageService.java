@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -35,13 +34,21 @@ public class FileStorageService {
         rootLocation = Paths.get(storageLocation).toAbsolutePath().normalize();
         try {
             Files.createDirectories(rootLocation);
+            System.out.println("File storage initialized at: " + rootLocation);
         } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory!", e);
+            throw new RuntimeException("Could not create upload directory: " + rootLocation, e);
         }
     }
 
     public String storeFile(Long taskId, MultipartFile file) {
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFilename = file.getOriginalFilename();
+
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new RuntimeException("File name is empty");
+        }
+
+        // Extract just the filename, handling both Windows (\) and Unix (/) paths
+        String fileName = extractFileName(originalFilename);
 
         try {
             if (fileName.contains("..")) {
@@ -54,10 +61,28 @@ public class FileStorageService {
             Path targetLocation = taskDir.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
+            System.out.println("File stored at: " + targetLocation);
             return "tasks/" + taskId + "/" + fileName;
         } catch (IOException e) {
-            throw new RuntimeException("Could not store file " + fileName, e);
+            throw new RuntimeException("Could not store file " + fileName + ": " + e.getMessage(), e);
         }
+    }
+
+    private String extractFileName(String fullPath) {
+        if (fullPath == null) {
+            return null;
+        }
+        // Handle Windows paths (backslash)
+        int lastBackslash = fullPath.lastIndexOf('\\');
+        // Handle Unix paths (forward slash)
+        int lastSlash = fullPath.lastIndexOf('/');
+
+        int lastSeparator = Math.max(lastBackslash, lastSlash);
+
+        if (lastSeparator >= 0) {
+            return fullPath.substring(lastSeparator + 1);
+        }
+        return fullPath;
     }
 
     public Resource loadFileAsResource(Long taskId, String fileName) {

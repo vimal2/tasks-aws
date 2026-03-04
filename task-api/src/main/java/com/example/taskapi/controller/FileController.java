@@ -4,6 +4,7 @@ import com.example.taskapi.service.FileStorageService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +37,29 @@ public class FileController {
     public ResponseEntity<Map<String, Object>> uploadFile(
             @RequestParam Long taskId,
             @RequestParam("file") MultipartFile file) {
-        String key = fileStorageService.storeFile(taskId, file);
-        return ResponseEntity.ok(Map.of(
-                "message", "File uploaded successfully",
-                "key", key,
-                "fileName", file.getOriginalFilename(),
-                "taskId", taskId
-        ));
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "File is empty",
+                    "taskId", taskId
+            ));
+        }
+
+        try {
+            String key = fileStorageService.storeFile(taskId, file);
+            return ResponseEntity.ok(Map.of(
+                    "message", "File uploaded successfully",
+                    "key", key,
+                    "fileName", file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown",
+                    "size", file.getSize(),
+                    "taskId", taskId
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", "Failed to upload file: " + e.getMessage(),
+                    "taskId", taskId
+            ));
+        }
     }
 
     @GetMapping("/download")
