@@ -27,7 +27,15 @@ const getPrefix = (taskId) => {
 exports.handler = async (event) => {
   console.log('Event:', JSON.stringify(event, null, 2));
 
-  const { httpMethod, path, queryStringParameters } = event;
+  // Support both API Gateway REST API (v1) and HTTP API (v2) event formats
+  const httpMethod = event.httpMethod || event.requestContext?.http?.method || '';
+  let path = event.path || event.rawPath || event.requestContext?.http?.path || '';
+  const queryStringParameters = event.queryStringParameters || {};
+
+  // Normalize path - remove stage prefix if present (e.g., /prod/upload -> /upload)
+  path = '/' + path.split('/').filter(p => p && p !== 'prod' && p !== 'dev').join('/');
+
+  console.log('Parsed - Method:', httpMethod, 'Path:', path);
 
   // Handle CORS preflight
   if (httpMethod === 'OPTIONS') {
@@ -36,7 +44,7 @@ exports.handler = async (event) => {
 
   try {
     // GET /files - List files (supports ?taskId=X for task-specific files)
-    if (path === '/files' && httpMethod === 'GET') {
+    if (path.endsWith('/files') && httpMethod === 'GET') {
       const taskId = queryStringParameters?.taskId;
       const prefix = getPrefix(taskId);
 
@@ -60,7 +68,7 @@ exports.handler = async (event) => {
     }
 
     // POST /upload - Get presigned URL for upload (supports taskId)
-    if (path === '/upload' && httpMethod === 'POST') {
+    if (path.endsWith('/upload') && httpMethod === 'POST') {
       const body = JSON.parse(event.body || '{}');
       const fileName = body.fileName || `file-${Date.now()}`;
       const contentType = body.contentType || 'application/octet-stream';
@@ -86,7 +94,7 @@ exports.handler = async (event) => {
     }
 
     // GET /logs - Get recent Lambda logs
-    if (path === '/logs' && httpMethod === 'GET') {
+    if (path.endsWith('/logs') && httpMethod === 'GET') {
       const logGroupName = '/aws/lambda/s3-file-processor';
 
       // Get latest log stream
@@ -124,7 +132,7 @@ exports.handler = async (event) => {
     }
 
     // DELETE /files - Delete a file (supports taskId)
-    if (path === '/files' && httpMethod === 'DELETE') {
+    if (path.endsWith('/files') && httpMethod === 'DELETE') {
       const body = JSON.parse(event.body || '{}');
       const fileName = body.fileName;
       const taskId = body.taskId;
