@@ -365,6 +365,39 @@ https://<API-GATEWAY-ID>.execute-api.us-east-1.amazonaws.com/prod
 | Files not uploading (permission) | Check `./uploads` folder permissions |
 | CORS errors | Use `npm start` which includes proxy config |
 
+### Windows-Specific Issues
+
+#### PEM File Permission Denied
+
+When using SSH/SCP on Windows, you may get "permission denied" errors with PEM files.
+
+**Fix permissions in PowerShell (Run as Administrator):**
+```powershell
+$pemFile = "terraform\task-app-key.pem"
+icacls $pemFile /inheritance:r
+icacls $pemFile /grant:r "$($env:USERNAME):(R)"
+```
+
+**Alternative: Use S3 to transfer files:**
+```powershell
+# Upload to S3
+aws s3 cp task-api\target\task-api-1.0.0.jar s3://<YOUR-BUCKET>/
+
+# On EC2, download from S3
+aws s3 cp s3://<YOUR-BUCKET>/task-api-1.0.0.jar ~/app/
+```
+
+#### SCP Path Issues on Windows
+
+Use forward slashes or escape backslashes:
+```powershell
+# Correct
+scp -i terraform/task-app-key.pem file.jar ec2-user@IP:~/
+
+# Also correct
+scp -i terraform\task-app-key.pem file.jar ec2-user@IP:~/
+```
+
 #### File Upload 404 Error
 
 If you see this error in browser console:

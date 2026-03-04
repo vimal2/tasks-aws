@@ -70,7 +70,7 @@ terraform apply
 
 Type `yes` when prompted. This will take 5-10 minutes (RDS is slow to create).
 
-### 5. Deploy Application (Automated)
+### 5. Deploy Application (Automated - Mac/Linux)
 
 Use the deploy script to automatically build and deploy everything:
 
@@ -87,7 +87,44 @@ This script will:
 - Build Angular app
 - Deploy frontend to S3
 
-### 5. Deploy Application (Manual)
+### 5. Deploy Application (Windows)
+
+#### Fix PEM File Permissions (Required on Windows)
+
+Windows requires special permission handling for PEM files:
+
+```powershell
+# Run in PowerShell as Administrator
+$pemFile = "task-app-key.pem"
+icacls $pemFile /inheritance:r
+icacls $pemFile /grant:r "$($env:USERNAME):(R)"
+```
+
+#### Deploy to EC2 (Windows)
+
+```powershell
+# Build backend
+cd ..\task-api
+mvn clean package -DskipTests
+
+# Copy to EC2 (use forward slashes or escape backslashes)
+scp -i ..\terraform\task-app-key.pem -o StrictHostKeyChecking=no target/task-api-1.0.0.jar ec2-user@<EC2_IP>:~/app/
+
+# SSH to EC2
+ssh -i ..\terraform\task-app-key.pem ec2-user@<EC2_IP>
+```
+
+#### Alternative: Use S3 to Transfer Files (No SSH permissions needed)
+
+```powershell
+# Upload JAR to S3
+aws s3 cp task-api\target\task-api-1.0.0.jar s3://<FILES_BUCKET>/
+
+# SSH to EC2, then download from S3
+aws s3 cp s3://<FILES_BUCKET>/task-api-1.0.0.jar ~/app/
+```
+
+### 5. Deploy Application (Manual - Mac/Linux)
 
 If you prefer to deploy manually:
 
