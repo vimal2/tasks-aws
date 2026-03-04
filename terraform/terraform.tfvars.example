@@ -1,0 +1,27 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# IMPORTANT: Never commit terraform.tfvars to git (it contains secrets)
+
+# AWS Region
+aws_region = "us-east-1"
+
+# Environment name
+environment = "dev"
+
+# Project name (used for resource naming)
+project_name = "task-app"
+
+# EC2 Configuration
+ec2_instance_type = "t2.micro"  # Free tier eligible
+ec2_key_name      = ""          # Leave empty to create new key pair
+
+# RDS Configuration
+db_instance_class    = "db.t3.micro"  # Free tier eligible
+db_name              = "taskdb"
+db_username          = "admin"
+db_password          = "YourStrongPassword123!"  # CHANGE THIS!
+db_allocated_storage = 20
+
+# Lambda Configuration
+lambda_memory  = 256
+lambda_timeout = 30

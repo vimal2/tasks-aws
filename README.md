@@ -92,7 +92,17 @@ tasks-aws/
 │   ├── api/                         # REST API Lambda
 │   └── index.js                     # S3 Trigger Lambda
 │
-├── AWS_SETUP_DOCUMENTATION.md       # Complete AWS setup guide
+├── terraform/                       # Infrastructure as Code
+│   ├── main.tf                      # Provider configuration
+│   ├── variables.tf                 # Input variables
+│   ├── ec2.tf                       # EC2 instance
+│   ├── rds.tf                       # RDS MySQL
+│   ├── s3.tf                        # S3 buckets
+│   ├── lambda.tf                    # Lambda functions
+│   ├── api-gateway.tf               # API Gateway
+│   └── outputs.tf                   # Output values
+│
+├── AWS_SETUP_DOCUMENTATION.md       # Manual AWS setup guide
 └── README.md                        # This file
 ```
 
@@ -200,8 +210,30 @@ curl "http://localhost:8080/api/files?taskId=1"
 
 ## AWS Deployment
 
-### Prerequisites
+### Option 1: Terraform (Recommended)
 
+Use Terraform to create and destroy all AWS resources with a single command.
+
+```bash
+cd terraform
+
+# Create terraform.tfvars from example
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars and set db_password
+
+# Create all resources
+terraform init
+terraform apply
+
+# When done - DESTROY ALL RESOURCES to stop billing
+terraform destroy
+```
+
+See **[terraform/README.md](./terraform/README.md)** for detailed instructions.
+
+### Option 2: Manual Setup
+
+For manual AWS Console/CLI setup:
 - AWS Account with configured CLI (`aws configure`)
 - Required IAM permissions (EC2, RDS, S3, Lambda, API Gateway)
 
