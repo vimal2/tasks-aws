@@ -78,7 +78,7 @@ resource "aws_instance" "api" {
   EOF
 
   root_block_device {
-    volume_size = 8
+    volume_size = 30  # Amazon Linux 2023 requires minimum 30GB
     volume_type = "gp2"
   }
 
