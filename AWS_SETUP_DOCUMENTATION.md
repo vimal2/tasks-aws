@@ -10,6 +10,8 @@ This guide walks you through deploying a full-stack Task Management application 
 
 > **Note for Learners**: This document shows example configurations. When you create resources, AWS generates unique IDs - use your own values, not the examples shown here.
 
+> **Tip**: For development and testing, you can run the entire application locally without AWS. See [Local Development Alternative](#local-development-alternative) at the end of this document.
+
 ---
 
 ## Table of Contents
@@ -29,6 +31,7 @@ This guide walks you through deploying a full-stack Task Management application 
 5. [Troubleshooting](#troubleshooting)
 6. [Cleanup](#cleanup)
 7. [Reference: Resource Details](#reference-resource-details)
+8. [Local Development Alternative](#local-development-alternative)
 
 ---
 
@@ -816,12 +819,13 @@ All resources are configured for **AWS Free Tier** eligibility:
 | Property | Value |
 |----------|-------|
 | Created | March 3, 2026 |
-| Updated | March 3, 2026 |
+| Updated | March 4, 2026 |
 | Author | Claude Code Assistant |
-| Version | 2.0 |
+| Version | 2.1 |
 
 ### Changelog
 
+- **v2.1** - Added Local Development Alternative section (H2 database, local file storage)
 - **v2.0** - Complete restructure with step-by-step beginner guide, removed specific IDs
 - **v1.1** - Added Serverless File Manager documentation (Lambda, API Gateway, S3 file storage)
 - **v1.0** - Initial documentation (EC2, RDS, S3 static hosting)
@@ -871,3 +875,80 @@ aws lambda list-functions --query 'Functions[*].[FunctionName,FunctionArn]' --ou
 # List Security Groups
 aws ec2 describe-security-groups --query 'SecurityGroups[*].[GroupId,GroupName]' --output table
 ```
+
+---
+
+## Local Development Alternative
+
+If you want to develop and test without AWS infrastructure, the application supports a **local development mode** with:
+- **H2 In-Memory Database** (instead of RDS MySQL)
+- **Local File Storage** (instead of S3 + Lambda)
+
+### Quick Start (Local Mode)
+
+#### 1. Start Backend with Local Profile
+
+```bash
+cd task-api
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+This starts the backend with:
+- H2 database at `jdbc:h2:mem:taskdb`
+- H2 Console at http://localhost:8080/h2-console (username: `sa`, password: empty)
+- Local file storage in `./uploads/` directory
+- File API endpoints at `/api/files`
+
+#### 2. Start Frontend with Local Configuration
+
+```bash
+cd task-ui
+npm install
+npm run start:local
+```
+
+Access the app at http://localhost:4200
+
+### Comparison: Local vs AWS
+
+| Feature | Local Mode | AWS Production |
+|---------|------------|----------------|
+| **Database** | H2 (in-memory, resets on restart) | MySQL on RDS (persistent) |
+| **File Storage** | `./uploads/` folder | S3 bucket |
+| **File API** | Spring Boot REST (`/api/files`) | Lambda + API Gateway |
+| **Frontend** | localhost:4200 | S3 static website |
+| **Backend** | localhost:8080 | EC2 instance |
+| **Cost** | Free | AWS charges apply |
+| **Setup Time** | ~2 minutes | ~30 minutes |
+
+### When to Use Each Mode
+
+| Use Local Mode When... | Use AWS Mode When... |
+|------------------------|----------------------|
+| Developing new features | Testing AWS integration |
+| Debugging backend code | Deploying to production |
+| Running unit/integration tests | Demonstrating the full architecture |
+| Working offline | Sharing with others |
+
+### Configuration Files
+
+| Mode | Backend Config | Frontend Config |
+|------|----------------|-----------------|
+| **Local** | `application-local.properties` | `environment.local.ts` |
+| **AWS** | `application.properties` | `environment.ts` |
+
+### Local Mode File Structure
+
+```
+task-api/
+└── uploads/
+    └── tasks/
+        ├── 1/
+        │   ├── document.pdf
+        │   └── image.png
+        ├── 2/
+        │   └── report.xlsx
+        └── ...
+```
+
+For complete local development instructions, see the main [README.md](./README.md).

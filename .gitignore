@@ -23,3 +23,7 @@ task-ui/.angular/
 
 # Logs
 *.log
+
+# Local file uploads (development)
+task-api/uploads/
+uploads/

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, switchMap } from 'rxjs';
+import { Observable, from, switchMap, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface TaskFile {
@@ -28,14 +28,25 @@ export interface UploadUrlResponse {
 })
 export class FileService {
   private apiUrl = environment.fileApiUrl;
+  private isLocal = (environment as any).isLocal || false;
 
   constructor(private http: HttpClient) {}
 
   getTaskFiles(taskId: number): Observable<FilesResponse> {
+    if (this.isLocal) {
+      return this.http.get<FilesResponse>(`${this.apiUrl}?taskId=${taskId}`);
+    }
     return this.http.get<FilesResponse>(`${this.apiUrl}/files?taskId=${taskId}`);
   }
 
   uploadTaskFile(taskId: number, file: File): Observable<any> {
+    if (this.isLocal) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('taskId', taskId.toString());
+      return this.http.post(`${this.apiUrl}/upload?taskId=${taskId}`, formData);
+    }
+
     return this.http.post<UploadUrlResponse>(`${this.apiUrl}/upload`, {
       fileName: file.name,
       contentType: file.type || 'application/octet-stream',
@@ -54,9 +65,15 @@ export class FileService {
   }
 
   deleteTaskFile(taskId: number, fileName: string): Observable<any> {
-    return this.http.request('DELETE', `${this.apiUrl}/files`, {
+    return this.http.request('DELETE', `${this.apiUrl}${this.isLocal ? '' : '/files'}`, {
       body: { fileName, taskId }
     });
+  }
+
+  downloadFile(taskId: number, fileName: string): void {
+    if (this.isLocal) {
+      window.open(`${this.apiUrl}/download?taskId=${taskId}&fileName=${encodeURIComponent(fileName)}`, '_blank');
+    }
   }
 
   formatFileSize(bytes: number): string {
